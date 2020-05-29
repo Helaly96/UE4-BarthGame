@@ -36,9 +36,10 @@ ASCharacter::ASCharacter()
 	SpringComp = CreateDefaultSubobject<USpringArmComponent >(TEXT("SpringArmComponent Created"));
 	HComponent = CreateDefaultSubobject<UHealthComponent >(TEXT("HealthComp"));
 	Name = CreateDefaultSubobject<UTextRenderComponent >(TEXT("TextRendererForName"));
+	FPCameraComp= CreateDefaultSubobject<UCameraComponent>(TEXT("FPCameraComponent"));
 	SpringComp->SetupAttachment(RootComponent);
 	Name->SetupAttachment(RootComponent);
-
+	FPCameraComp->SetupAttachment(GetMesh(), "spine_01");
 
 	CameraComp->SetupAttachment(SpringComp);
 	SpringComp->bUsePawnControlRotation = true;
@@ -52,6 +53,10 @@ ASCharacter::ASCharacter()
 
 	this->DefaultFov = CameraComp->FieldOfView;
 	ZoomFov = 40;
+
+	LookUpModifier = 2;
+
+	Current_Camera_State = 0;
 
 
 	//Rules = FAttachmentTransformRules(EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true);
@@ -165,7 +170,7 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	//if you remember them from blueprints days, they both take val as an argument
 
 	//remember to invert the value in the editor for the lookup, mouse Y Variable
-	PlayerInputComponent->BindAxis("LookUp", this, &ASCharacter::AddControllerPitchInput);
+	PlayerInputComponent->BindAxis("LookUp", this, &ASCharacter::LookUpMultiplier);
 	PlayerInputComponent->BindAxis("Turn", this, &ASCharacter::AddControllerYawInput);
 
 	//Binding the Crouch button
@@ -185,6 +190,22 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("SwitchGun", IE_Released, this, &ASCharacter::SwitchGun);
 
 }
+
+void ASCharacter::LookUpMultiplier(float val)
+{
+	ASCharacter::AddControllerPitchInput(val * LookUpModifier);
+}
+
+
+
+
+float ASCharacter::GetRemoteViewPitch() const
+{
+	float ClampedPitch = (RemoteViewPitch * 360.f / 255.f);
+	ClampedPitch = ClampedPitch > 90.f ? ClampedPitch - 360.f : ClampedPitch;
+	return FMath::Clamp<float>(ClampedPitch, -90.f, 90.f);
+}
+
 
 void ASCharacter::SwitchGun()
 {
@@ -272,6 +293,10 @@ void ASCharacter::OnHealthChange(UHealthComponent* HealthComp, float Health, flo
 
 }
 
+
+
+//This is called when GetEyeLocation is called :3
+
 FVector ASCharacter::GetPawnViewLocation() const
 {
 	if (CameraComp)
@@ -290,6 +315,39 @@ void ASCharacter::ServerSwitchGun_Implementation()
 	SwitchGun();
 
 }
+
+void ASCharacter::ChangeCamera()
+{
+		//We are in Currently Third Person
+		if (Current_Camera_State == 0)
+		{
+			CameraComp->SetActive(false);
+			TempCamera = CameraComp;
+			CameraComp = FPCameraComp;
+			CameraComp->SetActive(true);
+			CameraComp->bUsePawnControlRotation = true;
+			Current_Camera_State = 1;
+		}
+
+		//We are Currently in First person
+		else
+		{
+			CameraComp->SetActive(false);
+			CameraComp = TempCamera;
+			CameraComp->SetActive(true);
+			CameraComp->bUsePawnControlRotation = false;
+			Current_Camera_State = 0;
+		}
+	}
+
+
+
+void ASCharacter::ServerChangeCamera_Implementation()
+{
+	ChangeCamera();
+
+}
+
 
 bool ASCharacter::ServerSwitchGun_Validate()
 {
@@ -310,6 +368,9 @@ void ASCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 	DOREPLIFETIME(ASCharacter, MainWeapon);
 	DOREPLIFETIME(ASCharacter, Name);
 	DOREPLIFETIME(ASCharacter, PlayerName);
+	DOREPLIFETIME(ASCharacter, CameraComp);
+	DOREPLIFETIME(ASCharacter, FPCameraComp);
+
 }
 
 

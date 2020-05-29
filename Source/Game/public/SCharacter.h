@@ -33,14 +33,22 @@ public:
 
 	void TakeNameFromTerminal(FString Name);
 
+	void LookUpMultiplier(float val);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	float LookUpModifier;
 protected:
 	// Called when the game starts or when spawned
 
 	//Vars
 
 	//make the next item visible anywhere (so we can access it from blueprints), but read only in the blueprint
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Replicated)
 	UCameraComponent* CameraComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Replicated)
+	UCameraComponent* FPCameraComp;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USpringArmComponent* SpringComp;
 
@@ -104,8 +112,19 @@ protected:
 	void StopFire();
 	void SwitchGun();
 
+	// 0 if Third , 1 If first
+	UPROPERTY(Replicated)
+	int Current_Camera_State;
+
+	UFUNCTION(BlueprintCallable)
+	void ChangeCamera();
+
+	UFUNCTION(Server, Reliable)
+	void ServerChangeCamera();
+
 	void ChangeName(FString Name);
 
+	UCameraComponent* TempCamera;
 
 	UFUNCTION()
 	void OnHealthChange(UHealthComponent* HealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
@@ -121,4 +140,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual FVector GetPawnViewLocation() const override;
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	UFUNCTION(BlueprintCallable)
+	float GetRemoteViewPitch() const;
 };
