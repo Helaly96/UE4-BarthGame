@@ -46,10 +46,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Replicated)
 	UCameraComponent* CameraComp;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Replicated)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	UCameraComponent* FPCameraComp;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
 	USpringArmComponent* SpringComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -111,7 +111,7 @@ protected:
 	void StartFire();
 	void StopFire();
 	void SwitchGun();
-
+	
 	// 0 if Third , 1 If first
 	UPROPERTY(Replicated)
 	int Current_Camera_State;

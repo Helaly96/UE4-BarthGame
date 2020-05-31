@@ -36,13 +36,15 @@ ASCharacter::ASCharacter()
 	SpringComp = CreateDefaultSubobject<USpringArmComponent >(TEXT("SpringArmComponent Created"));
 	HComponent = CreateDefaultSubobject<UHealthComponent >(TEXT("HealthComp"));
 	Name = CreateDefaultSubobject<UTextRenderComponent >(TEXT("TextRendererForName"));
-	FPCameraComp= CreateDefaultSubobject<UCameraComponent>(TEXT("FPCameraComponent"));
+	FPCameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("FPCameraComponent"));
 	SpringComp->SetupAttachment(RootComponent);
 	Name->SetupAttachment(RootComponent);
 	FPCameraComp->SetupAttachment(GetMesh(), "spine_01");
 
 	CameraComp->SetupAttachment(SpringComp);
 	SpringComp->bUsePawnControlRotation = true;
+
+	CameraComp->SetIsReplicated(true);
 
 	//to make unreal make the player crouch
 	//The pawn has a movement component which has paramters such as it can crouch, jump , fly
@@ -58,6 +60,8 @@ ASCharacter::ASCharacter()
 
 	Current_Camera_State = 0;
 
+	
+
 
 	//Rules = FAttachmentTransformRules(EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true);
 	//GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Block);
@@ -72,8 +76,12 @@ void ASCharacter::Tick(float DeltaTime)
 	target_fov = Want_To_Zoom ? ZoomFov : DefaultFov;
 
 	//Lerps between 2 values, given delta time and speed 
-	current_fov = FMath::FInterpTo(CameraComp->FieldOfView, target_fov, DeltaTime, 20);
-	CameraComp->SetFieldOfView(current_fov);
+	if (CameraComp)
+	{
+		current_fov = FMath::FInterpTo(CameraComp->FieldOfView, target_fov, DeltaTime, 20);
+		CameraComp->SetFieldOfView(current_fov);
+	}
+
 
 
 }
@@ -188,7 +196,8 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ASCharacter::StartFire);
 	PlayerInputComponent->BindAction("SwitchGun", IE_Released, this, &ASCharacter::SwitchGun);
-
+	PlayerInputComponent->BindAction("ChangeCameraMode", IE_Released, this, &ASCharacter::ChangeCamera);
+	
 }
 
 void ASCharacter::LookUpMultiplier(float val)
@@ -318,14 +327,20 @@ void ASCharacter::ServerSwitchGun_Implementation()
 
 void ASCharacter::ChangeCamera()
 {
+	if (Role < ROLE_Authority)
+	{
+		ServerChangeCamera();
+		return;
+	}
 		//We are in Currently Third Person
 		if (Current_Camera_State == 0)
 		{
 			CameraComp->SetActive(false);
 			TempCamera = CameraComp;
 			CameraComp = FPCameraComp;
-			CameraComp->SetActive(true);
+			SpringComp->bUsePawnControlRotation = false;
 			CameraComp->bUsePawnControlRotation = true;
+			CameraComp->SetActive(true);
 			Current_Camera_State = 1;
 		}
 
@@ -336,6 +351,7 @@ void ASCharacter::ChangeCamera()
 			CameraComp = TempCamera;
 			CameraComp->SetActive(true);
 			CameraComp->bUsePawnControlRotation = false;
+			SpringComp->bUsePawnControlRotation = true;
 			Current_Camera_State = 0;
 		}
 	}
@@ -345,7 +361,6 @@ void ASCharacter::ChangeCamera()
 void ASCharacter::ServerChangeCamera_Implementation()
 {
 	ChangeCamera();
-
 }
 
 
@@ -369,7 +384,9 @@ void ASCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 	DOREPLIFETIME(ASCharacter, Name);
 	DOREPLIFETIME(ASCharacter, PlayerName);
 	DOREPLIFETIME(ASCharacter, CameraComp);
-	DOREPLIFETIME(ASCharacter, FPCameraComp);
+	DOREPLIFETIME(ASCharacter, Current_Camera_State);
+	DOREPLIFETIME(ASCharacter, SpringComp);
+	//DOREPLIFETIME(ASCharacter, FPCameraComp);
 
 }
 
@@ -391,7 +408,6 @@ void ASCharacter::ServerChangeName_Implementation(const FString& Name)
 	
 	PlayerName = Name;
 }
-
 
 
 

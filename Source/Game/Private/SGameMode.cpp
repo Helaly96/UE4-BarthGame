@@ -13,8 +13,6 @@ ASGameMode::ASGameMode()
 
 void ASGameMode::RestartDeadPlayers()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Entered Tick"));
-
 	for (FConstPlayerControllerIterator it = GetWorld()->GetPlayerControllerIterator(); it; ++it)
 	{
 		APlayerController* PC = it->Get();
@@ -22,7 +20,8 @@ void ASGameMode::RestartDeadPlayers()
 		{
 			PlayerToRevive = PC;
 			FTimerHandle Handler;
-			GetWorldTimerManager().SetTimer(Handler, this, &ASGameMode::Revive, 2.0f, false, 5.0f);
+			Revive();
+			//GetWorldTimerManager().SetTimer(Handler, this, &ASGameMode::Revive, 2.0f, false, 5.0f);
 		}
 	}
 }
@@ -59,7 +58,7 @@ void ASGameMode::EndWave()
 void ASGameMode::StartPlay()
 {
 	Super::StartPlay();
-	//PrepareForNextWave();
+	PrepareForNextWave();
 }
 
 void ASGameMode::PrepareForNextWave()
