@@ -19,6 +19,8 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnHealthChangedSignature ChangeHelath;
 
+	bool bIsDead;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

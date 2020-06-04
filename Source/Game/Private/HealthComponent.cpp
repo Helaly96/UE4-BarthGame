@@ -4,6 +4,9 @@
 #include "HealthComponent.h"
 #include "GameFramework/Actor.h"
 #include "Net/UnrealNetwork.h"
+#include "SGameMode.h"
+#include "Engine/World.h"
+
 // Sets default values for this component's properties
 UHealthComponent::UHealthComponent()
 {
@@ -11,6 +14,7 @@ UHealthComponent::UHealthComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 	SetIsReplicated(true);
+	bIsDead = false;
 	// ...
 }
 
@@ -44,7 +48,7 @@ void UHealthComponent::BeginPlay()
 
 void UHealthComponent::TakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
-	if (Damage < 0)
+	if (Damage < 0 || bIsDead)
 	{
 
 	}
@@ -56,8 +60,20 @@ void UHealthComponent::TakeAnyDamage(AActor* DamagedActor, float Damage, const c
 		Health = FMath::Clamp(Health, 0.0f, DefaultHealth);
 	}
 
+	bIsDead = Health <= 0;
 	//UE_LOG(LogTemp, Warning, TEXT("TookDamage"));
 	ChangeHelath.Broadcast(this,Health,Damage, DamageType , InstigatedBy, DamageCauser);
+	
+
+	if (Health <= 0)
+	{
+		ASGameMode* GM = Cast<ASGameMode>(GetWorld()->GetAuthGameMode());
+		if (GM)
+		{
+			GM->OnActorKilled.Broadcast(GetOwner(), DamageCauser , InstigatedBy);
+		}
+
+	}
 }
 
 

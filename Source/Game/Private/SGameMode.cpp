@@ -11,6 +11,7 @@ ASGameMode::ASGameMode()
 	WaveCount = 0;
 	GameStateClass = ASGameState::StaticClass();
 	PlayerStateClass = ASPlayerState::StaticClass();
+	next_assignable_team = 0;
 }
 
 void ASGameMode::RestartDeadPlayers()
@@ -28,10 +29,40 @@ void ASGameMode::RestartDeadPlayers()
 	}
 }
 
+void ASGameMode::AssignTeams()
+{
+	for (FConstPlayerControllerIterator it = GetWorld()->GetPlayerControllerIterator(); it; ++it)
+	{
+		APlayerController* PC = it->Get();
+		ASPlayerState* PS = PC->GetPlayerState<ASPlayerState>();
+		if (ensureAlways(PS))
+		{
+			if (PS->bHasTeamSet == false)
+			{
+				if (next_assignable_team == 0)
+				{
+					PS->TeamNo = 0;
+					next_assignable_team = 1;
+					PS->bHasTeamSet = true;
+				}
+				else
+				{
+					PS->TeamNo = 1;
+					next_assignable_team = 0;
+					PS->bHasTeamSet = true;
+				}
+					
+			}
+		}
+
+	}
+}
+
 void ASGameMode::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	RestartDeadPlayers();
+	AssignTeams();
 
 }
 

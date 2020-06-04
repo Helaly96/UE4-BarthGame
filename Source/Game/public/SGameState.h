@@ -31,13 +31,13 @@ class GAME_API ASGameState : public AGameStateBase
 
 public:
 
-	UPROPERTY(BlueprintReadOnly,ReplicatedUsing=OnRep_ChangeScore)
+	UPROPERTY(BluePrintReadWrite,ReplicatedUsing=OnRep_ChangeScore)
 	FCurrentScore MatchScore;
 	
 	UFUNCTION()
 	void OnRep_ChangeScore();
 
-
+	UFUNCTION(BlueprintCallable)
 	void SetScore(FCurrentScore MScore);
 
 	UFUNCTION(BlueprintImplementableEvent)

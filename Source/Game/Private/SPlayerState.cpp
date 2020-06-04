@@ -3,3 +3,11 @@
 
 #include "SPlayerState.h"
 
+ASPlayerState::ASPlayerState()
+{
+	bHasTeamSet = false;
+}
+void ASPlayerState::AddScore(int ScoreDelta)
+{
+	Score += ScoreDelta;
+}

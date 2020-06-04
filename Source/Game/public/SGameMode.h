@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "SGameMode.generated.h"
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnActorKilled ,AActor*, KillerActor, AActor*, KilledActor,AController *,KillerController);
+
 struct FCurrentScore;
 /**
  * 
@@ -28,7 +30,7 @@ protected:
 
 
 	void SetMatchScore(FCurrentScore Score);
-
+	void AssignTeams();
 
 
 	//bots to spawn in a current wave
@@ -49,4 +51,9 @@ public:
 	void Revive();
 	ASGameMode();
 	virtual void StartPlay() override;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnActorKilled OnActorKilled;
+
+	int next_assignable_team;
 };

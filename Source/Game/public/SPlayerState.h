@@ -14,8 +14,17 @@ class GAME_API ASPlayerState : public APlayerState
 {
 	GENERATED_BODY()
 
-	UFUNCTION(BlueprintCallable)
-	void AddScore(int ScoreDelta)
+		UFUNCTION(BlueprintCallable)
+		void AddScore(int ScoreDelta);
 
+
+
+public:
+	ASPlayerState();
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bHasTeamSet;
+	UPROPERTY(BlueprintReadOnly)
+	int TeamNo;
 	
 };
