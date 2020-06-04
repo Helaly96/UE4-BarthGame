@@ -3,12 +3,14 @@
 
 #include "SGameMode.h"
 #include "Engine/World.h"
-
-
+#include "SGameState.h"
+#include "SPlayerState.h"
 ASGameMode::ASGameMode()
 {
 	TimeBetweenWaves = 2;
 	WaveCount = 0;
+	GameStateClass = ASGameState::StaticClass();
+	PlayerStateClass = ASPlayerState::StaticClass();
 }
 
 void ASGameMode::RestartDeadPlayers()
@@ -30,6 +32,18 @@ void ASGameMode::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	RestartDeadPlayers();
+
+}
+
+
+void ASGameMode::SetMatchScore(FCurrentScore Score)
+{
+	ASGameState* CurrentGameState = GetGameState <ASGameState>();
+
+	if (ensureAlways(CurrentGameState))
+	{
+		CurrentGameState->OnRep_ChangeScore();
+	}
 
 }
 
@@ -58,7 +72,10 @@ void ASGameMode::EndWave()
 void ASGameMode::StartPlay()
 {
 	Super::StartPlay();
-	PrepareForNextWave();
+	//PrepareForNextWave();
+	FCurrentScore GameScore;
+	SetMatchScore(GameScore);
+
 }
 
 void ASGameMode::PrepareForNextWave()

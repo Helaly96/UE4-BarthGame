@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "SGameMode.generated.h"
-
+struct FCurrentScore;
 /**
  * 
  */
@@ -25,6 +25,9 @@ protected:
 	void StartWave();
 	void PrepareForNextWave();
 	void EndWave();
+
+
+	void SetMatchScore(FCurrentScore Score);
 
 
 
