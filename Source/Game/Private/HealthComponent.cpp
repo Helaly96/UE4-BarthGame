@@ -60,13 +60,13 @@ void UHealthComponent::TakeAnyDamage(AActor* DamagedActor, float Damage, const c
 		Health = FMath::Clamp(Health, 0.0f, DefaultHealth);
 	}
 
-	bIsDead = Health <= 0;
 	//UE_LOG(LogTemp, Warning, TEXT("TookDamage"));
 	ChangeHelath.Broadcast(this,Health,Damage, DamageType , InstigatedBy, DamageCauser);
 	
 
-	if (Health <= 0)
+	if (Health <= 0 && !bIsDead)
 	{
+		bIsDead = true;
 		ASGameMode* GM = Cast<ASGameMode>(GetWorld()->GetAuthGameMode());
 		if (GM)
 		{
